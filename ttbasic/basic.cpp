@@ -18,7 +18,7 @@
 
 // Depending on device functions
 // TO-DO Rewrite these functions to fit your machine
-#define STR_EDITION "ARDUINO"
+const char STR_EDITION[] PROGMEM =  "ARDUINO";
 
 // Terminal control
 #define c_putch(c) Serial.write(c)
@@ -40,16 +40,51 @@ short getrnd(short value) {
 short iexp(void);
 
 // Keyword table
-const char *kwtbl[] = {
-  "GOTO", "GOSUB", "RETURN",
-  "FOR", "TO", "STEP", "NEXT",
-  "IF", "REM", "STOP",
-  "INPUT", "PRINT", "LET",
-  ",", ";",
-  "-", "+", "*", "/", "(", ")",
-  ">=", "#", ">", "=", "<=", "<",
-  "@", "RND", "ABS", "SIZE",
-  "LIST", "RUN", "NEW"
+const char kw0[] PROGMEM = "GOTO";
+const char kw1[] PROGMEM = "GOSUB";
+const char kw2[] PROGMEM = "RETURN";
+const char kw3[] PROGMEM = "FOR";
+const char kw4[] PROGMEM = "TO";
+const char kw5[] PROGMEM = "STEP";
+const char kw6[] PROGMEM = "NEXT";
+const char kw7[] PROGMEM = "IF";
+const char kw8[] PROGMEM = "REM";
+const char kw9[] PROGMEM = "STOP";
+const char kw10[] PROGMEM = "INPUT";
+const char kw11[] PROGMEM = "PRINT";
+const char kw12[] PROGMEM = "LET";
+const char kw13[] PROGMEM = ",";
+const char kw14[] PROGMEM = ";";
+const char kw15[] PROGMEM = "-";
+const char kw16[] PROGMEM = "+";
+const char kw17[] PROGMEM = "*";
+const char kw18[] PROGMEM = "/";
+const char kw19[] PROGMEM = "(";
+const char kw20[] PROGMEM = ")";
+const char kw21[] PROGMEM = ">=";
+const char kw22[] PROGMEM = "#";
+const char kw23[] PROGMEM = ">";
+const char kw24[] PROGMEM = "=";
+const char kw25[] PROGMEM = "<=";
+const char kw26[] PROGMEM = "<";
+const char kw27[] PROGMEM = "@";
+const char kw28[] PROGMEM = "RND";
+const char kw29[] PROGMEM = "ABS";
+const char kw30[] PROGMEM = "SIZE";
+const char kw31[] PROGMEM = "LIST";
+const char kw32[] PROGMEM = "RUN";
+const char kw33[] PROGMEM = "NEW";
+
+const char * const kwtbl[] PROGMEM = {
+  kw0, kw1, kw2,
+  kw3, kw4, kw5, kw6,
+  kw7, kw8, kw9,
+  kw10, kw11, kw12,
+  kw13, kw14,
+  kw15, kw16, kw17, kw18, kw19, kw20,
+  kw21, kw22, kw23, kw24, kw25, kw26,
+  kw27, kw28, kw29, kw30,
+  kw31, kw32, kw33
 };
 
 // Keyword count
@@ -72,7 +107,7 @@ enum {
 
 // List formatting condition
 // 後ろに空白を入れない中間コード
-const unsigned char i_nsa[] = {
+const unsigned char i_nsa[] PROGMEM = {
   I_RETURN, I_STOP, I_COMMA,
   I_MINUS, I_PLUS, I_MUL, I_DIV, I_OPEN, I_CLOSE,
   I_GTE, I_SHARP, I_GT, I_EQ, I_LTE, I_LT,
@@ -80,7 +115,7 @@ const unsigned char i_nsa[] = {
 };
 
 // 前が定数か変数のとき前の空白をなくす中間コード
-const unsigned char i_nsb[] = {
+const unsigned char i_nsb[] PROGMEM = {
   I_MINUS, I_PLUS, I_MUL, I_DIV, I_OPEN, I_CLOSE,
   I_GTE, I_SHARP, I_GT, I_EQ, I_LTE, I_LT,
   I_COMMA, I_SEMI, I_EOL
@@ -90,7 +125,7 @@ const unsigned char i_nsb[] = {
 char sstyle(unsigned char code,
   const unsigned char *table, unsigned char count) {
   while(count--) //中間コードの数だけ繰り返す
-    if (code == table[count]) //もし該当の中間コードがあったら
+    if (code == pgm_read_byte(&table[count])) //もし該当の中間コードがあったら
       return 1; //1を持ち帰る
   return 0; //（なければ）0を持ち帰る
 }
@@ -101,30 +136,53 @@ char sstyle(unsigned char code,
 
 // Error messages
 unsigned char err;// Error message index
-const char* errmsg[] = {
-  "OK",
-  "Devision by zero",
-  "Overflow",
-  "Subscript out of range",
-  "Icode buffer full",
-  "List full",
-  "GOSUB too many nested",
-  "RETURN stack underflow",
-  "FOR too many nested",
-  "NEXT without FOR",
-  "NEXT without counter",
-  "NEXT mismatch FOR",
-  "FOR without variable",
-  "FOR without TO",
-  "LET without variable",
-  "IF without condition",
-  "Undefined line number",
-  "\'(\' or \')\' expected",
-  "\'=\' expected",
-  "Illegal command",
-  "Syntax error",
-  "Internal error",
-  "Abort by [ESC]"
+const char errmsg0[] PROGMEM = "OK";
+const char errmsg1[] PROGMEM = "Devision by zero";
+const char errmsg2[] PROGMEM = "Overflow";
+const char errmsg3[] PROGMEM = "Subscript out of range";
+const char errmsg4[] PROGMEM = "Icode buffer full";
+const char errmsg5[] PROGMEM = "List full";
+const char errmsg6[] PROGMEM = "GOSUB too many nested";
+const char errmsg7[] PROGMEM = "RETURN stack underflow";
+const char errmsg8[] PROGMEM = "FOR too many nested";
+const char errmsg9[] PROGMEM = "NEXT without FOR";
+const char errmsg10[] PROGMEM = "NEXT without counter";
+const char errmsg11[] PROGMEM = "NEXT mismatch FOR";
+const char errmsg12[] PROGMEM = "FOR without variable";
+const char errmsg13[] PROGMEM = "FOR without TO";
+const char errmsg14[] PROGMEM = "LET without variable";
+const char errmsg15[] PROGMEM = "IF without condition";
+const char errmsg16[] PROGMEM = "Undefined line number";
+const char errmsg17[] PROGMEM = "\'(\' or \')\' expected";
+const char errmsg18[] PROGMEM = "\'=\' expected";
+const char errmsg19[] PROGMEM = "Illegal command";
+const char errmsg20[] PROGMEM = "Syntax error";
+const char errmsg21[] PROGMEM = "Internal error";
+const char errmsg22[] PROGMEM = "Abort by [ESC]";
+const char* const errmsg[] PROGMEM = {
+  errmsg0,
+  errmsg1,
+  errmsg2,
+  errmsg3,
+  errmsg4,
+  errmsg5,
+  errmsg6,
+  errmsg7,
+  errmsg8,
+  errmsg9,
+  errmsg10,
+  errmsg11,
+  errmsg12,
+  errmsg13,
+  errmsg14,
+  errmsg15,
+  errmsg16,
+  errmsg17,
+  errmsg18,
+  errmsg19,
+  errmsg20,
+  errmsg21,
+  errmsg22,
 };
 
 // Error code assignment
@@ -178,6 +236,13 @@ char c_isalpha(char c) {
 
 void c_puts(const char *s) {
   while (*s) c_putch(*s++); //終端でなければ出力して繰り返す
+}
+
+void c_puts_p(const char *s) {
+  while (char c = pgm_read_byte(s)) {
+     c_putch(c); //終端でなければ出力して繰り返す
+     s++;
+  }
 }
 
 void c_gets() {
@@ -297,7 +362,7 @@ short getnum() {
 unsigned char toktoi() {
   unsigned char i; //ループカウンタ（一部の処理で中間コードに相当）
   unsigned char len = 0; //中間コードの並びの長さ
-  char* pkw = 0; //ひとつのキーワードの内部を指すポインタ
+  const char* pkw = 0; //ひとつのキーワードの内部を指すポインタ
   char* ptok; //ひとつの単語の内部を指すポインタ
   char* s = lbuf; //文字列バッファの内部を指すポインタ
   char c; //文字列の括りに使われている文字（「"」または「'」）
@@ -309,19 +374,19 @@ unsigned char toktoi() {
 
     //キーワードテーブルで変換を試みる
     for (i = 0; i < SIZE_KWTBL; i++) { //全部のキーワードを試す
-      pkw = (char *)kwtbl[i]; //キーワードの先頭を指す
+      pkw = (const char *)pgm_read_word(&kwtbl[i]); //キーワードの先頭を指す
       ptok = s; //単語の先頭を指す
 
       //キーワードと単語の比較
       while ( //次の条件が成立する限り繰り返す
-      (*pkw != 0) && //キーワードの末尾に達していなくて
-      (*pkw == c_toupper(*ptok))) { //文字が一致している
+      (pgm_read_byte(pkw) != 0) && //キーワードの末尾に達していなくて
+      (pgm_read_byte(pkw) == c_toupper(*ptok))) { //文字が一致している
         pkw++; //キーワードの次の文字へ進む
         ptok++; //単語の次の文字へ進む
       }
 
       //キーワードと単語が一致した場合の処理
-      if (*pkw == 0) { //もしキーワードの末尾に達していたら（変換成功）
+      if (pgm_read_byte(pkw) == 0) { //もしキーワードの末尾に達していたら（変換成功）
         if (len >= SIZE_IBUF - 1) { //もし中間コードが長すぎたら
           err = ERR_IBUFOF; //エラー番号をセット
           return 0; //0を持ち帰る
@@ -352,7 +417,7 @@ unsigned char toktoi() {
       break; //文字列の処理を打ち切る（終端の処理へ進む）
     }
 
-    if (*pkw == 0) //もしすでにキーワードで変換に成功していたら
+    if (pgm_read_byte(pkw) == 0) //もしすでにキーワードで変換に成功していたら
       continue; //繰り返しの先頭へ戻って次の単語を変換する
 
     ptok = s; //単語の先頭を指す
@@ -507,7 +572,7 @@ void putlist(unsigned char* ip) {
 
     //キーワードの処理
     if (*ip < SIZE_KWTBL) { //もしキーワードなら
-      c_puts(kwtbl[*ip]); //キーワードテーブルの文字列を表示
+      c_puts_p((const char*)pgm_read_word(&kwtbl[*ip])); //キーワードテーブルの文字列を表示
       if (!nospacea(*ip)) //もし例外にあたらなければ
         c_putch(' '); //空白を表示
 
@@ -878,9 +943,11 @@ void iinput() {
         return; //終了
       }
       if (prompt) { //もしまだプロンプトを表示していなければ
-        c_puts("@("); //「@(」を表示
+        static const char atparenthesis[] PROGMEM = "@(";
+        c_puts_p(atparenthesis); //「@(」を表示
         putnum(index, 0); //添え字を表示
-        c_puts("):"); //「):」を表示
+        static const char parenthesisclose[] PROGMEM = "):";
+        c_puts_p(parenthesisclose); //「):」を表示
       }
       value = getnum(); //値を入力
       if (err) //もしエラーが生じたら
@@ -1292,7 +1359,8 @@ void error() {
     if (cip >= listbuf && cip < listbuf + SIZE_LIST && *clp)
     {
       newline(); //改行
-      c_puts("LINE:"); //「LINE:」を表示
+      static const char line[] PROGMEM = "LINE:";
+      c_puts_p(line); //「LINE:」を表示
       putnum(getlineno(clp), 0); //行番号を調べて表示
       c_putch(' '); //空白を表示
       putlist(clp + 3); //リストの該当行を表示
@@ -1300,13 +1368,14 @@ void error() {
     else //指示の実行中なら
     {
       newline(); //改行
-      c_puts("YOU TYPE: "); //「YOU TYPE:」を表示
+      static const char youtype[] PROGMEM = "YOU TYPE: ";
+      c_puts_p(youtype); //「YOU TYPE:」を表示
       c_puts(lbuf); //文字列バッファの内容を表示
     }
   } //もし「OK」ではなかったらの末尾
 
   newline(); //改行
-  c_puts(errmsg[err]); //「OK」またはエラーメッセージを表示
+  c_puts_p((const char*)pgm_read_word(&errmsg[err])); //「OK」またはエラーメッセージを表示
   newline(); //改行
   err = 0; //エラー番号をクリア
 }
@@ -1322,10 +1391,12 @@ void basic() {
   inew(); //実行環境を初期化
 
   //起動メッセージ
-  c_puts("TOYOSHIKI TINY BASIC"); //「TOYOSHIKI TINY BASIC」を表示
+  static const char title[] PROGMEM = "TOYOSHIKI TINY BASIC";
+  c_puts_p(title); //「TOYOSHIKI TINY BASIC」を表示
   newline(); //改行
-  c_puts(STR_EDITION); //版を区別する文字列を表示
-  c_puts(" EDITION"); //「 EDITION」を表示
+  c_puts_p(STR_EDITION); //版を区別する文字列を表示
+  static const char edition[] PROGMEM = " EDITION";
+  c_puts_p(edition); //「 EDITION」を表示
   newline(); //改行
   error(); //「OK」またはエラーメッセージを表示してエラー番号をクリア
 
