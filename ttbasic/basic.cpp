@@ -447,14 +447,21 @@ unsigned char toktoi() {
         value = tmp; //0を持ち帰る
       } while (c_isdigit(*ptok)); //文字が数字である限り繰り返す
 
-      if (len >= SIZE_IBUF - 3) { //もし中間コードが長すぎたら
+      if (len >= SIZE_IBUF - ((value >= 0 && value <= 9) ? 1 : (value <= 255) ? 2 : 3)) { //もし中間コードが長すぎたら
         err = ERR_IBUFOF; //エラー番号をセット
         return 0; //0を持ち帰る
       }
       s = ptok; //文字列の処理ずみの部分を詰める
-      ibuf[len++] = I_NUM; //中間コードを記録
-      ibuf[len++] = value & 255; //定数の下位バイトを記録
-      ibuf[len++] = value >> 8; //定数の上位バイトを記録
+      if (value >= 0 && value <= 9) {
+        ibuf[len++] = I_NUM_0 + value; //中間コードを記録
+      } else if (value <= 255) {
+        ibuf[len++] = I_NUM_B; //中間コードを記録
+        ibuf[len++] = value; //定数の値を記録
+      } else {
+        ibuf[len++] = I_NUM_W; //中間コードを記録
+        ibuf[len++] = value & 255; //定数の下位バイトを記録
+        ibuf[len++] = value >> 8; //定数の上位バイトを記録
+      }
     }
     else
 
