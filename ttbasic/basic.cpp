@@ -274,6 +274,7 @@ void c_gets() {
 
 // Print numeric specified columns
 void putnum(short value, short d) {
+  char pbuf[7];
   unsigned char dig; //桁位置
   unsigned char sign; //負号の有無（値を絶対値に変換した印）
 
@@ -284,26 +285,27 @@ void putnum(short value, short d) {
     sign = 0; //負号なし
   }
 
-  lbuf[6] = 0; //終端を置く
+  pbuf[6] = 0; //終端を置く
   dig = 6; //桁位置の初期値を末尾に設定
   do { //次の処理をやってみる
-    lbuf[--dig] = (value % 10) + '0'; //1の位を文字に変換して保存
+    pbuf[--dig] = (value % 10) + '0'; //1の位を文字に変換して保存
     value /= 10; //1桁落とす
   } while (value > 0); //値が0でなければ繰り返す
 
   if (sign) //もし負号ありなら
-    lbuf[--dig] = '-'; //負号を保存
+    pbuf[--dig] = '-'; //負号を保存
 
   while (6 - dig < d) { //指定の桁数を下回っていれば繰り返す
     c_putch(' '); //桁の不足を空白で埋める
     d--; //指定の桁数を1減らす
   }
-  c_puts(&lbuf[dig]); //桁位置からバッファの文字列を表示
+  c_puts(&pbuf[dig]); //桁位置からバッファの文字列を表示
 }
 
 // Input numeric and return value
 // Called by only INPUT statement
 short getnum() {
+  char gbuf[7];
   short value, tmp; //値と計算過程の値
   char c; //文字
   unsigned char len; //文字数
@@ -319,32 +321,32 @@ short getnum() {
     //行頭の符号および数字が入力された場合の処理（符号込みで6桁を超えないこと）
     if ((len == 0 && (c == '+' || c == '-')) ||
       (len < 6 && c_isdigit(c))) {
-      lbuf[len++] = c; //バッファへ入れて文字数を1増やす
+      gbuf[len++] = c; //バッファへ入れて文字数を1増やす
       c_putch(c); //表示
     }
   }
   newline(); //改行
-  lbuf[len] = 0; //終端を置く
+  gbuf[len] = 0; //終端を置く
 
-  switch (lbuf[0]) { //先頭の文字で分岐
+  switch (gbuf[0]) { //先頭の文字で分岐
   case '-': //「-」の場合
     sign = 1; //負の値
-    len = 1;  //数字列はlbuf[1]以降
+    len = 1;  //数字列はgbuf[1]以降
     break;
   case '+': //「+」の場合
     sign = 0; //正の値
-    len = 1;  //数字列はlbuf[1]以降
+    len = 1;  //数字列はgbuf[1]以降
     break;
   default:  //どれにも該当しない場合
     sign = 0; //正の値
-    len = 0;  //数字列はlbuf[0]以降
+    len = 0;  //数字列はgbuf[0]以降
     break;
   }
 
   value = 0; //値をクリア
   tmp = 0; //計算過程の値をクリア
-  while (lbuf[len]) { //終端でなければ繰り返す
-    tmp = 10 * value + lbuf[len++] - '0'; //数字を値に変換
+  while (gbuf[len]) { //終端でなければ繰り返す
+    tmp = 10 * value + gbuf[len++] - '0'; //数字を値に変換
     if (value > tmp) { //もし計算過程の値が前回より小さければ
       err = ERR_VOF; //オーバーフローを記録
     }
