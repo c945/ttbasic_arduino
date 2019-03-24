@@ -1,0 +1,203 @@
+--- ./basic.cpp 2016-05-13 00:00:00.000000000 +0900
++++ ./basic.cpp 2016-05-13 00:00:00.000000000 +0900
+@@ -101,7 +101,8 @@ enum {
+   I_GTE, I_SHARP, I_GT, I_EQ, I_LTE, I_LT,
+   I_ARRAY, I_RND, I_ABS, I_SIZE,
+   I_LIST, I_RUN, I_NEW,
+-  I_NUM,
++  I_NUM_0, I_NUM_1, I_NUM_2, I_NUM_3, I_NUM_4, I_NUM_5,
++  I_NUM_6, I_NUM_7, I_NUM_8, I_NUM_9, I_NUM_B, I_NUM_W,
+   I_VAR_A, I_VAR_B, I_VAR_C, I_VAR_D, I_VAR_E, I_VAR_F,
+   I_VAR_G, I_VAR_H, I_VAR_I, I_VAR_J, I_VAR_K, I_VAR_L,
+   I_VAR_M, I_VAR_N, I_VAR_O, I_VAR_P, I_VAR_Q, I_VAR_R,
+@@ -111,6 +112,7 @@ enum {
+   I_EOL
+ };
+
++#define is_inum(c) ((c) >= I_NUM_0 && (c) <= I_NUM_W)
+ #define is_ivar(c) ((c) >= I_VAR_A && (c) <= I_VAR_Z)
+
+ // List formatting condition
+@@ -445,13 +447,20 @@ unsigned char toktoi() {
+         value = tmp; //0を持ち帰る
+       } while (c_isdigit(*ptok)); //文字が数字である限り繰り返す
+
+-      if (len >= SIZE_IBUF - 3) { //もし中間コードが長すぎたら
++      if (len >= SIZE_IBUF - ((value >= 0 && value <= 9) ? 1 : (value <= 255) ? 2 : 3)) { //もし中間コードが長すぎたら
+         err = ERR_IBUFOF; //エラー番号をセット
+         return 0; //0を持ち帰る
+       }
+-      ibuf[len++] = I_NUM; //中間コードを記録
+-      ibuf[len++] = value & 255; //定数の下位バイトを記録
+-      ibuf[len++] = value >> 8; //定数の上位バイトを記録
++      if (value >= 0 && value <= 9) {
++        ibuf[len++] = I_NUM_0 + value; //中間コードを記録
++      } else if (value <= 255) {
++        ibuf[len++] = I_NUM_B; //中間コードを記録
++        ibuf[len++] = value; //定数の値を記録
++      } else {
++        ibuf[len++] = I_NUM_W; //中間コードを記録
++        ibuf[len++] = value & 255; //定数の下位バイトを記録
++        ibuf[len++] = value >> 8; //定数の上位バイトを記録
++      }
+       s = ptok; //文字列の処理ずみの部分を詰める
+     }
+     else
+@@ -519,6 +528,34 @@ short getlineno(unsigned char *lp) {
+   return *(lp + 1) | *(lp + 2) << 8; //行番号を持ち帰る
+ }
+
++short getinum(unsigned char *lp) {
++  unsigned char i_num = *lp;
++
++  if (i_num >= I_NUM_0 && i_num <= I_NUM_9) {
++    return i_num - I_NUM_0; //定数を持ち帰る
++  } else if (i_num == I_NUM_B) {
++    return *(lp + 1); //定数を持ち帰る
++  } else if (i_num == I_NUM_W) {
++    return *(lp + 1) | *(lp + 2) << 8; //定数を持ち帰る
++  } else {
++    return 0;
++  }
++}
++
++unsigned char inumsize(unsigned char *lp) {
++  unsigned char i_num = *lp;
++
++  if (i_num >= I_NUM_0 && i_num <= I_NUM_9) {
++    return 1;
++  } else if (i_num == I_NUM_B) {
++    return 2;
++  } else if (i_num == I_NUM_W) {
++    return 3;
++  } else {
++    return 0;
++  }
++}
++
+ // Search line by line number
+ unsigned char* getlp(short lineno) {
+   unsigned char *lp; //ポインタ
+@@ -531,20 +568,23 @@ unsigned char* getlp(short lineno) {
+ }
+
+ // Insert i-code to the list
+-void inslist() {
++void inslist(unsigned char size) {
++  unsigned short line = getinum(ibuf);
++  unsigned char isize = inumsize(ibuf);
++  size = 1 + 2 + size - isize;
+   unsigned char *insp; //挿入位置
+   unsigned char *p1, *p2; //移動先と移動元
+   short len; //移動の長さ
+
+-  if (getsize() < *ibuf) { //もし空きが不足していたら
++  if (size > 4 && getsize() < size) { //もし空きが不足していたら
+     err = ERR_LBUFOF; //エラー番号をセット
+     return; //処理を打ち切る
+   }
+
+-  insp = getlp(getlineno(ibuf)); //挿入位置を取得
++  insp = getlp(line); //挿入位置を取得
+
+   //同じ行番号の行が存在したらとりあえず削除
+-  if (getlineno(insp) == getlineno(ibuf)) { //もし行番号が一致したら
++  if (getlineno(insp) == line) { //もし行番号が一致したら
+     p1 = insp; //p1を挿入位置に設定
+     p2 = p1 + *p1; //p2を次の行に設定
+     while (len = *p2) { //次の行が末尾でなければ繰り返す
+@@ -555,20 +595,23 @@ void inslist() {
+   }
+
+   //行番号だけが入力された場合はここで終わる
+-  if (*ibuf == 4) //もし長さが4（行番号のみ）なら
++  if (size == 4) //もし長さが4（行番号のみ）なら
+     return; //終了する
+
+   //挿入のためのスペースを空ける
+   for (p1 = insp; *p1; p1 += *p1); //p1をリストの末尾へ移動
+   len = p1 - insp + 1; //移動する幅を計算
+-  p2 = p1 + *ibuf; //p2を末尾より1行の長さだけ後ろに設定
++  p2 = p1 + size; //p2を末尾より1行の長さだけ後ろに設定
+   while (len--) //移動する幅だけ繰り返す
+     *p2-- = *p1--; //後ろへズラす
+
+   //行を転送する
+-  len = *ibuf; //中間コードの長さを設定
++  len = size - 1 - 2; //中間コードの長さを設定
+   p1 = insp; //転送先を設定
+-  p2 = ibuf; //転送元を設定
++  *p1++ = size;
++  *p1++ = line & 0xff;
++  *p1++ = line >> 8;
++  p2 = ibuf + isize; //転送元を設定
+   while (len--) //中間コードの長さだけ繰り返す
+     *p1++ = *p2++; //転送
+ }
+@@ -598,10 +641,9 @@ void putlist(unsigned char* ip) {
+     else
+
+     //定数の処理
+-    if (*ip == I_NUM) { //もし定数なら
+-      ip++; //ポインタを値へ進める
+-      putnum(*ip | *(ip + 1) << 8, 0); //値を取得して表示
+-      ip += 2; //ポインタを次の中間コードへ進める
++    if (is_inum(*ip)) { //もし定数なら
++      putnum(getinum(ip), 0); //値を取得して表示
++      ip += inumsize(ip); //ポインタを次の中間コードへ進める
+       if (!nospaceb(*ip)) //もし例外にあたらなければ
+         c_putch(' '); //空白を表示
+     }
+@@ -675,7 +717,17 @@ short ivalue() {
+   switch (*cip) { //中間コードで分岐
+
+   //定数の取得
+-  case I_NUM: //定数の場合
++  case I_NUM_0 ... I_NUM_9: //0～9の定数の場合
++    value = *cip++ - I_NUM_0; //定数を取得
++    break; //ここで打ち切る
++
++  case I_NUM_B: //1バイト定数の場合
++    cip++; //中間コードポインタを次へ進める
++    value = *cip; //定数を取得
++    cip += 1; //中間コードポインタを定数の次へ進める
++    break; //ここで打ち切る
++
++  case I_NUM_W: //2バイト定数の場合
+     cip++; //中間コードポインタを次へ進める
+     value = *cip | *(cip + 1) << 8; //定数を取得
+     cip += 2; //中間コードポインタを定数の次へ進める
+@@ -1280,8 +1332,8 @@ void ilist() {
+   short lineno; //表示開始行番号
+
+   //表示開始行番号の設定
+-  if (*cip == I_NUM) //もしLIST命令に引数があったら
+-    lineno = getlineno(cip); //引数を読み取って表示開始行番号とする
++  if (is_inum(*cip)) //もしLIST命令に引数があったら
++    lineno = getinum(cip); //引数を読み取って表示開始行番号とする
+   else //引数がなければ
+     lineno = 0; //表示開始行番号を0とする
+
+@@ -1337,8 +1389,7 @@ void icom() {
+
+   case I_LIST: //I_LISTの場合（LIST命令）
+     cip++; //中間コードポインタを次へ進める
+-    if (*cip == I_EOL || //もし行末か、あるいは
+-      *(cip + 3) == I_EOL) //続いて引数があれば
++    if (cip[inumsize(cip)] == I_EOL) //もし行末か、あるいは続いて引数があれば
+       ilist(); //LIST命令を実行
+     else //そうでなければ
+       err = ERR_SYNTAX; //エラー番号をセット
+@@ -1417,9 +1468,8 @@ void basic() {
+     }
+
+     //中間コードの並びがプログラムと判断される場合
+-    if (*ibuf == I_NUM) { //もし中間コードバッファの先頭が行番号なら
+-      *ibuf = len; //中間コードバッファの先頭を長さに書き換える
+-      inslist(); //中間コードの1行をリストへ挿入
++    if (is_inum(*ibuf)) { //もし中間コードバッファの先頭が行番号なら
++      inslist(len); //中間コードの1行をリストへ挿入
+       if (err) //もしエラーが発生したら
+         error(); //エラーメッセージを表示してエラー番号をクリア
+       continue; //繰り返しの先頭へ戻ってやり直し
+
